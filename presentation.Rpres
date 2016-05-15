@@ -1,0 +1,97 @@
+Graphically representing the properties of the option contracts
+========================================================
+author: Tihomir Nikolov
+date: 14th May 2016
+transition: rotate
+
+
+
+
+========================================================
+transition: rotate
+
+
+### Five main parameters determine the price of an option contarct
+
+- Stock Price
+- Strike Price
+- Volatility
+- Interest Rate
+- Time
+
+### Code for calculating the Black-Scholes option price.
+
+```{r,echo=T,height=2}
+BS_call <- function(St,K,r,sigma,t){
+    d1=(1/(sigma*sqrt(t))*(log(St/K) + (r + (sigma^2)/2)*(t)))
+    d2=(1/(sigma*sqrt(t))*(log(St/K) + (r - (sigma^2)/2)*(t)))
+    St*pnorm(d1) - K*exp(-r*(t))*pnorm(d2)
+}
+```
+Basic Profit Plot
+========================================================
+
+
+```{r,echo=FALSE}
+call_opt <-function(x){
+    if (x<K) {y<-(-CallPrice)}
+    else {y=-CallPrice +x-K}
+    y
+}
+r <- .05; sigma <- .2; t <- 1; St <- 50; K <- 50
+CallPrice <- BS_call(St,K,r,sigma,t)
+
+```
+
+##### Plot with parameters 50 for stock and strike price, interest rate 5%, volatility 20% and time to expiration one year.
+
+```{r, echo=F,fig.height=3}
+library(ggplot2)
+qplot(2*((1:1e3*K)/1e3),as.numeric(lapply(2*((1:1e3*K)/1e3),call_opt)),col=I("red"),xlab = "Price of unerlying",ylab="Profit of Long Call")+geom_hline(yintercept=0,col="blue")+theme_bw()+annotate("Text",x=.5*K,y=CallPrice*.5,label="Long Call",size=5)
+
+```
+
+- By varying the five parameters we can see how the profit plot changes
+- Allows comparison between different positions (short/long), and different options (call/put)
+- Reflects the Black-Scholes pricing
+
+Sensitivity of the Option Price 
+========================================================
+#### Sensitivity of the Volatolity
+
+```{r, echo=T,results='tex',echo=FALSE,fig.height=3}
+library(gridExtra)
+r1 <- .05; sigma1 <- .2; t1 <- 1; St1 <- 50; K1 <- 50
+g1 <- qplot(2*((1:1e3*sigma1)/1e3),as.numeric(BS_call(St,K,r,(2*((1:1e3*sigma1)/1e3)),t)),col=I("red"),xlab = "Volatility", ylab = "Call option price" )+geom_hline(yintercept=0,col="blue")+theme_bw()
+r2 <- .05; sigma2 <- .5; t2 <- 1; St2 <- 50; K2 <- 50
+g2 <- qplot(2*((1:1e3*sigma2)/1e3),as.numeric(BS_call(St,K,r,(2*((1:1e3*sigma2)/1e3)),t)),col=I("red"),xlab = "Volatility", ylab = "Call option price" )+geom_hline(yintercept=0,col="blue")+theme_bw()
+grid.arrange(g1,g2,nrow=1,ncol=2)
+```
+
+- The option price has somewhat different sensitivities towards its different parameters
+- By varying stock and strike price, interest rate, time and volatility, differencies could be discerned
+- It is divided in two groups and allows for comparisons between the call and put option
+
+The Greek Letters 
+========================
+#### Comparison between gamma and vega for an option
+
+
+```{r,echo=F,fig.height=4}
+vega_option <- function(St,K,r,sigma,t){
+    d1=(1/(sigma*sqrt(t))*(log(St/K) + (r + (sigma^2)/2)*(t)))
+    (exp(-(d1^2)/2)/(sqrt(2*pi)))*(St*sqrt(t))
+}
+gamma_option <- function(St,K,r,sigma,t){
+    d1=(1/(sigma*sqrt(t))*(log(St/K) + (r + (sigma^2)/2)*(t)))
+    (exp(-(d1^2)/2)/(sqrt(2*pi)))/(St*sigma*sqrt(t))
+}
+
+g3<- qplot(2*((1:1e3*St)/1e3),as.numeric(vega_option((2*((1:1e3*St)/1e3)),K,r,sigma,t)),col=I("red"),xlab = "Stock price", ylab = "Vega of an option" )+geom_hline(yintercept=0,col="blue")+theme_bw()
+g4 <-qplot(2*((1:1e3*St)/1e3),as.numeric(gamma_option((2*((1:1e3*St)/1e3)),K,r,sigma,t)),col=I("red"),xlab = "Stock price", ylab = "Gamma of an option" )+geom_hline(yintercept=0,col="blue")+theme_bw()
+grid.arrange(g3,g4,nrow=1,ncol=2)
+```
+
+- All greek letters are included in the app
+- Divided in two groups and allows comparisons between call and put options
+- Based on Black-Scholes formula
